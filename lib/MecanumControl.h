@@ -6,7 +6,9 @@
 class MecanumControl {
 private:
     MotorControl motor1, motor2, motor3, motor4;
-    int wheelSpeed;  // Motor hız değeri
+    float wheel_radius = 0.05; // Tekerlek yarıçapı (m)
+    float robot_length = 0.2; // Robotun uzunluğu / 2 (m)
+    float robot_width = 0.15; // Robotun genişliği / 2 (m)
 
 public:
     MecanumControl(int motor1_pwm, int motor1_inA, int motor1_inB,
@@ -16,123 +18,50 @@ public:
         : motor1(motor1_pwm, motor1_inA, motor1_inB, 0),
           motor2(motor2_pwm, motor2_inA, motor2_inB, 1),
           motor3(motor3_pwm, motor3_inA, motor3_inB, 2),
-          motor4(motor4_pwm, motor4_inA, motor4_inB, 3){}
+          motor4(motor4_pwm, motor4_inA, motor4_inB, 3) {}
     
-    void setSpeed(int speed) {
-        wheelSpeed = constrain(speed, 0, 255);  // Hızı 0 ile 255 arasında sınırlıyoruz
-        motor1.setSpeed(wheelSpeed);
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
-    void moveForward() {
-        motor1.moveForward();
-        motor2.moveForward();
-        motor3.moveForward();
-        motor4.moveForward();
-        motor1.setSpeed(wheelSpeed);
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
+    void moveWithCmdVel(float Vx, float Vy, float omega) {
+        float L = robot_length;
+        float W = robot_width;
+        float r = wheel_radius;
+    
+        // Set a threshold below which the speed will be considered 0
+        float threshold = 0.2;  // You can adjust this value as needed
+        
+        if (abs(Vx) < threshold) Vx = 0;
+        if (abs(Vy) < threshold) Vy = 0;
+        if (abs(omega) < threshold) omega = 0;
 
-    void moveBackward() {
-        motor1.moveBackward();
-        motor2.moveBackward();
-        motor3.moveBackward();
-        motor4.moveBackward();
-        motor1.setSpeed(wheelSpeed);
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
+        // Calculate the motor speeds
+        float W1 = (Vx - Vy - (L + W) * omega) / r;
+        float W2 = (Vx + Vy + (L + W) * omega) / r;
+        float W3 = (Vx + Vy - (L + W) * omega) / r;
+        float W4 = (Vx - Vy + (L + W) * omega) / r;
+    
+        // Apply threshold to motor speeds
+        if (abs(W1) < threshold) W1 = 0;
+        if (abs(W2) < threshold) W2 = 0;
+        if (abs(W3) < threshold) W3 = 0;
+        if (abs(W4) < threshold) W4 = 0;
+    
+        // Set the motor speeds
+        setMotorSpeed(motor1, W1);
+        setMotorSpeed(motor2, W2);
+        setMotorSpeed(motor3, W3);
+        setMotorSpeed(motor4, W4);
     }
+    
+    void setMotorSpeed(MotorControl &motor, float speed) {
+		    motor.setSpeed(constrain(abs(speed) * 255, 0, 255));
+		    if (speed > 0) {
+		        motor.moveForward();
+		    } else if (speed < 0) {
+		        motor.moveBackward();
+		    } else {
+		        motor.stop();
+		    }
+}
 
-    void moveSidewaysRight() {
-        motor1.moveBackward();
-        motor2.moveForward();
-        motor3.moveForward();
-        motor4.moveBackward();
-        motor1.setSpeed(wheelSpeed);
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
-
-    void moveSidewaysLeft() {
-        motor1.moveForward();
-        motor2.moveBackward();
-        motor3.moveBackward();
-        motor4.moveForward();
-        motor1.setSpeed(wheelSpeed);
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
-
-    void rotateLeft() {
-        motor1.moveBackward();
-        motor2.moveForward();
-        motor3.moveBackward();
-        motor4.moveForward();
-        motor1.setSpeed(wheelSpeed);
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
-
-    void rotateRight() {
-        motor1.moveForward();
-        motor2.moveBackward();
-        motor3.moveForward();
-        motor4.moveBackward();
-        motor1.setSpeed(wheelSpeed);
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
-
-    void moveRightForward() {
-        motor1.moveForward();
-        motor2.stop();
-        motor3.stop();
-        motor4.moveForward();
-        motor1.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
-
-    void moveRightBackward() {
-        motor1.stop();
-        motor2.moveBackward();
-        motor3.moveBackward();
-        motor4.stop();
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-    }
-
-    void moveLeftForward() {
-        motor1.stop();
-        motor2.moveForward();
-        motor3.moveForward();
-        motor4.stop();
-        motor2.setSpeed(wheelSpeed);
-        motor3.setSpeed(wheelSpeed);
-    }
-
-    void moveLeftBackward() {
-        motor1.moveBackward();
-        motor2.stop();
-        motor3.stop();
-        motor4.moveBackward();
-        motor1.setSpeed(wheelSpeed);
-        motor4.setSpeed(wheelSpeed);
-    }
-
-    void stop() {
-        motor1.stop();
-        motor2.stop();
-        motor3.stop();
-        motor4.stop();
-    }
 };
 
 #endif  // MECANUM_CONTROL_H
