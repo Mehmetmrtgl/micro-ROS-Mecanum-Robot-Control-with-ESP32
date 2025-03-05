@@ -24,26 +24,13 @@ public:
         float L = robot_length;
         float W = robot_width;
         float r = wheel_radius;
-    
-        // Set a threshold below which the speed will be considered 0
-        float threshold = 0.2;  // You can adjust this value as needed
-        
-        if (abs(Vx) < threshold) Vx = 0;
-        if (abs(Vy) < threshold) Vy = 0;
-        if (abs(omega) < threshold) omega = 0;
 
         // Calculate the motor speeds
         float W1 = (Vx - Vy - (L + W) * omega) / r;
         float W2 = (Vx + Vy + (L + W) * omega) / r;
-        float W3 = (Vx + Vy - (L + W) * omega) / r;
-        float W4 = (Vx - Vy + (L + W) * omega) / r;
-    
-        // Apply threshold to motor speeds
-        if (abs(W1) < threshold) W1 = 0;
-        if (abs(W2) < threshold) W2 = 0;
-        if (abs(W3) < threshold) W3 = 0;
-        if (abs(W4) < threshold) W4 = 0;
-    
+        float W3 = (Vx - Vy + (L + W) * omega) / r;
+        float W4 = (Vx + Vy - (L + W) * omega) / r;
+
         // Set the motor speeds
         setMotorSpeed(motor1, W1);
         setMotorSpeed(motor2, W2);
