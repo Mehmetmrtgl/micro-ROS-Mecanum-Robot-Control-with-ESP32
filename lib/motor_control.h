@@ -5,15 +5,14 @@
 
 class MotorControl {
 public:
-    int pwmPin, inAPin, inBPin;
+    int pwmPin, inDirPin;
     int channel;
 
-    MotorControl(int pwmPin, int inAPin, int inBPin, int channel) 
-        : pwmPin(pwmPin), inAPin(inAPin), inBPin(inBPin), channel(channel) {
-        pinMode(inAPin, OUTPUT);
-        pinMode(inBPin, OUTPUT);
+    MotorControl(int pwmPin, int inDirPin, int channel) 
+        : pwmPin(pwmPin), inDirPin(inDirPin), channel(channel) {
+        pinMode(inDirPin, OUTPUT);
         pinMode(pwmPin, OUTPUT);
-        ledcSetup(channel, 1000, 8);  // 1 kHz, 8-bit çözünürlük
+        ledcSetup(channel, 5000, 8);  // 1 kHz, 8-bit çözünürlük
         ledcAttachPin(pwmPin, channel);
     }
 
@@ -22,18 +21,14 @@ public:
     }
 
     void moveForward() {
-        digitalWrite(inAPin, HIGH);
-        digitalWrite(inBPin, LOW);
+        digitalWrite(inDirPin, HIGH);
     }
 
     void moveBackward() {
-        digitalWrite(inAPin, LOW);
-        digitalWrite(inBPin, HIGH);
+        digitalWrite(inDirPin, LOW);
     }
 
     void stop() {
-        digitalWrite(inAPin, LOW);
-        digitalWrite(inBPin, LOW);
         ledcWrite(channel, 0);  // Motoru durdur
     }
 };
